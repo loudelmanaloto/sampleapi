@@ -9,6 +9,7 @@ require_once "./models/Post.php";
 $db = new Connection();
 $pdo = $db->connect();
 
+$auth = new Auth($pdo);
 $get = new Get($pdo);
 $post = new Post($pdo);
 
@@ -23,15 +24,26 @@ switch ($_SERVER['REQUEST_METHOD']){
         switch ($req[0]){
             case 'login':
                 $d = json_decode(file_get_contents("php://input"));
+                echo json_encode($auth->login($d));
             break;
 
+            case 'adduser':
+                $d = json_decode(file_get_contents("php://input"));
+                echo json_encode($auth->adduser($d));
+            break;   
+
             case 'getemployee':
-                if(count($req)>1){
-                    echo json_encode($get->getInfo($req[1]));
+                if($auth->authorized()){
+                    if(count($req)>1){
+                        echo json_encode($get->getInfo($req[1]));
+                    }
+                    else{
+                        echo json_encode($get->getInfo(null));
+                    }   
                 }
                 else{
-                    echo json_encode($get->getInfo(null));
-                }   
+                    echo errMsg(401);
+                }    
             break;
             case 'addemployee':
                 $d = json_decode(file_get_contents("php://input"));
@@ -65,6 +77,7 @@ switch ($_SERVER['REQUEST_METHOD']){
             default:
                 echo errMsg(400);
             break;
+
         }
     break;
     default:
