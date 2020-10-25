@@ -74,6 +74,15 @@ switch ($_SERVER['REQUEST_METHOD']){
             case 'insert':
                 $d = json_decode(file_get_contents("php://input"));
                 echo json_encode($post->insert($d));
+	    break;	
+	    case 'upload':
+                if($auth->authorized()){
+                    echo json_encode($post->uploadfile());
+                }
+                else{
+                    errMsg(401);
+                }    
+            break;	
             default:
                 echo errMsg(400);
             break;
