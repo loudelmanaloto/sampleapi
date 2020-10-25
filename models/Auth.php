@@ -46,6 +46,33 @@ class Auth
 		return str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
 	}
 
+	public function authorized() {
+
+		$hdrs = apache_request_headers();
+		$authHeader = '';
+		$authUser = '';
+		foreach ($hdrs as $header => $value) {
+	    if($header == "Authorization") {
+	    	$authHeader = $value;
+	    }
+	    if($header == "X-Auth-User") { 
+	    	$authUser = $value;
+	    }
+		}
+		$sql = "SELECT token FROM accounts_tbl WHERE empno='$authUser'";
+		$res = $this->gm->execute_query($sql, "Incorrect username or password");
+		if ($res['code'] == 200) {
+			if($res['data'][0]['token']==$authHeader){
+				return true;
+			} else {
+				return false;
+			}
+		} 
+		return false;
+
+	}
+
+
 	//Password check
 
 	public function encrypt_password($pword)
@@ -91,13 +118,15 @@ class Auth
 		$res = $this->gm->execute_query($sql, 'Incorrect Username or Password');
 
 		if ($res['code'] == 200) {
-			if ($this->pword_check($password, $res['data'][0]['pword_fld'])) {
+			if ($this->pword_check($password, $res['data'][0]['password'])) {
 				$uc = $res['data'][0]['empno'];
 				$ue = $res['data'][0]['email'];
 				$fn = $res['data'][0]['fname'] . ' ' . $res['data'][0]['lname'];
 				$tk = $this->generateToken($uc, $ue, $fn);
 
 				$sql = "UPDATE accounts_tbl SET token='$tk' WHERE empno='$uc'";
+				$this->gm->execute_query($sql, "");
+
 				$code = 200;
 				$remarks = "success";
 				$message = "Logged in successfully";
@@ -114,7 +143,7 @@ class Auth
 			$message = $res['errmsg'];		
 		}
 
-		return $this->gm->api_result($payload, $remarks, $message, $code);
+		return $this->gm->api_result($payload, $remarks, $message, $res['code']);
 	}
 
 	public function adduser($data){

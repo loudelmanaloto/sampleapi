@@ -121,6 +121,26 @@ class Post
         return $this->gm->api_result($payload, $remarks, $message, $res['code']);
     }
 
+	public function uploadfile(){
+        $file =$_FILES['file']['name'];
+        $temp_file = $_FILES['file']['tmp_name'];
+        $target_path = "./uploads/";
+        $target_path = $target_path . basename($file);
+        
+		if (move_uploaded_file($temp_file, $target_path)) {
+			header('Content-type: application/json');
+            $message = 'Upload and move success';
+            $data = ['filepath' => $target_path, 'success' => true, 'message' => $message];
+			return $data;
+        }
+        else{
+            $data = ['filepath' => null, 'success' => false, 'message' => 'There was an error uploading the file, please try again!'];
+			return $data;
+        }
+
+
+    }
+
 
 }
 ?>
